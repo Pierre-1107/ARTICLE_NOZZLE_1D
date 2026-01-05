@@ -1,0 +1,21 @@
+physics:
+  gamma: 1.4
+
+mesh:
+  x0: 0.0
+  xL: 3.0
+  Nx: 31
+
+numerics:
+  Nt: 2001
+  CFL: [0.5]
+
+scheme:
+  name: Rusanov
+
+live_plot:
+  bool: False
+  frequency: 50
+
+convergence:
+  criterion: 2e-3

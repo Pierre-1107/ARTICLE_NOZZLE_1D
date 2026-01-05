@@ -1,0 +1,14 @@
+physics:
+  gamma: 1.4
+
+mesh:
+  x0: 0.0
+  xL: 3.0
+  Nx: 31
+
+numerics:
+  Nt: 1201
+  CFL: 0.5
+
+live_plot:
+  bool: False
