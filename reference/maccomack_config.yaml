@@ -7,7 +7,7 @@ mesh:
   Nx: 31
 
 numerics:
-  Nt: 1201
+  Nt: 1401
   CFL: 0.5
 
 live_plot:

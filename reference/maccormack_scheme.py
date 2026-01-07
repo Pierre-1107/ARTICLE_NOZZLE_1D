@@ -49,6 +49,11 @@ def time_step(velocity:np.ndarray, temperature:np.ndarray, CFL:float, dx:float) 
         raise RuntimeError(
             f"Simulation stopped in scheme << MacCormack >>: {e}"
         )
+    
+
+def compute_error(ref:np.ndarray, sol:np.ndarray) -> float:
+
+    return 100 * np.max(np.divide(np.abs(sol - ref), ref))
 
 
 def mac_cormack_scheme(RHO:np.ndarray, V:np.ndarray, T:np.ndarray, A:np.ndarray, 

@@ -84,10 +84,6 @@ class FiniteVolumeSolver1D:
 
     def initialize(self) -> None:
 
-            # density = np.ones(self.Nx)
-            # velocity = 0.1 * np.ones(self.Nx)
-            # pressure = np.ones(self.Nx)
-
             density = 1 - 0.3146 * self.x_mesh
             temperature = 1 - 0.2314 * self.x_mesh
             velocity = (0.1 + 1.09 * self.x_mesh) * np.sqrt(temperature)
@@ -99,40 +95,31 @@ class FiniteVolumeSolver1D:
 
 
     def apply_bc(self) -> None:
-        """
-        Anderson BC applied on primitive variables.
-        We only reconstruct primitives where needed to avoid NaNs.
-        """
 
-        # ---- interior primitives (cells 1:-1) ----
         density_i, velocity_i, _ = cons_to_prim(self.U[1:-1], self.gas)
         temperature_i = compute_temperature(U=self.U[1:-1], gas=self.gas)
 
-        # Create full arrays for primitives including ghosts
         density = np.empty(self.Nx + 2)
         velocity = np.empty(self.Nx + 2)
         temperature = np.empty(self.Nx + 2)
 
         density[1:-1], velocity[1:-1], temperature[1:-1] = density_i, velocity_i, temperature_i
 
-        # ================= Inlet (index 0) =================
         density[0] = 1.0
         temperature[0] = 1.0
         velocity[0] = 2.0 * velocity[1] - velocity[2]
 
-        # ================= Outlet (index -1) ===============
         density[-1] = 2.0 * density[-2] - density[-3]
         velocity[-1] = 2.0 * velocity[-2] - velocity[-3]
         temperature[-1] = 2.0 * temperature[-2] - temperature[-3]
 
-        # Safety floors (prevents division by 0)
         density = np.maximum(density, 1e-8)
         temperature = np.maximum(temperature, 1e-8)
 
-        # Pressure consistent with your nondim model
         pressure = self.gas.r * density * temperature
 
         self.U[:] = prim_to_cons(density=density, velocity=velocity, pressure=pressure, gas=self.gas)
+
 
     def compute_dt(self) -> float:
 
@@ -140,21 +127,10 @@ class FiniteVolumeSolver1D:
 
         return self.CFL * self.dx / float(np.max(wave_velocity))
 
+
     def compute_steady_residuals_rho_u_T(self) -> tuple[float, float, float]:
-        """
-        Steady residuals based on flux-source balance, expressed for (rho, u, T).
 
-        Conservative residual:
-            R = (AF_{i+1/2} - AF_{i-1/2})/dx - S
-
-        Then convert to primitive residuals:
-            R_rho = R[:,0]
-            R_u   = (R_rhou - u*R_rho)/rho
-            R_T   = (gamma-1) * ( (R_rhoE - E*R_rho)/rho - u*R_u )
-        where E = rhoE/rho
-        """
-
-        # ---------- flux ----------
+        # +---+ flux +---+ #
         AF = np.zeros((self.Nx + 1, 3))
         for i in range(self.Nx + 1):
             UL = self.U[i]
@@ -162,22 +138,22 @@ class FiniteVolumeSolver1D:
             Fnum = self.scheme.compute_scheme_flux(UL=UL, UR=UR)
             AF[i] = self.A_total_face[i] * Fnum
 
-        # ---------- source ----------
+        # +---+ source +---+ #
         _, _, p = cons_to_prim(U=self.U[1:-1], gas=self.gas)
         S = nozzle_source(U=self.U[1:-1], pressure=p, dareadx=self.dAdx)
 
-        # ---------- conservative residual per cell ----------
+        # +---+ residu conservatif +---+ #
         R = (AF[1:] - AF[:-1]) / self.dx - S
         R_rho = R[:, 0]
         R_rhou = R[:, 1]
         R_rhoE = R[:, 2]
 
-        # ---------- primitives from current state ----------
+        # +---+ variables/grandeurs primitives +---+ #
         rho = self.U[1:-1, 0]
         u = self.U[1:-1, 1] / rho
         E = self.U[1:-1, 2] / rho
 
-        # ---------- primitive residuals ----------
+        # +---+ residu non conservatif +---+ #
         R_u = (R_rhou - u * R_rho) / rho
         R_E = (R_rhoE - E * R_rho) / rho
         R_T = (self.gas.gamma - 1.0) * (R_E - u * R_u)
@@ -187,6 +163,7 @@ class FiniteVolumeSolver1D:
             float(np.max(np.abs(R_u))),
             float(np.max(np.abs(R_T))),
         )
+
 
     def solver(self, dt:float) -> None:
 
@@ -260,14 +237,14 @@ class FiniteVolumeSolver1D:
             dt = self.compute_dt()
             self.solver(dt)
 
-            # ---- steady residuals (rho, u, T) ----
+            # +---+ # résidus non conservatif +---+ #
             res_density, res_velocity, res_temperature = self.compute_steady_residuals_rho_u_T()
 
             self.residuals[it, 0] = res_density
             self.residuals[it, 1] = res_velocity
             self.residuals[it, 2] = res_temperature
 
-            # ---- live plot ----
+            # +---+ # live plot mise à jour +---+ #
             if self.bool_plot and it % self.frequency == 0:
                 it_axis = np.arange(it + 1)
 
@@ -294,7 +271,7 @@ class FiniteVolumeSolver1D:
                     f"T={self.residuals[it,2]:.3e}"
                 )
 
-                # ---- convergence test (stationary!) ----
+                # +---+ test de convergence +---+ #
             if np.max(np.abs(self.residuals[it, :])) < self.criterion:
 
                 print(
@@ -317,7 +294,6 @@ class FiniteVolumeSolver1D:
             plt.ioff()
             plt.show()
 
-        # ================== Post-processing ==================
         density = self.U[1:-1, 0]
         velocity = self.U[1:-1, 1] / density
         pressure = cons_to_prim(self.U[1:-1], self.gas)[2]

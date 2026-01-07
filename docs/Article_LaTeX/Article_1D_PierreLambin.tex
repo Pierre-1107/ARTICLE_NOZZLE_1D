@@ -1,0 +1,230 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[
+  left=1cm,
+  right=1cm,
+  top=1cm,
+  bottom=1cm
+]{geometry}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+
+\usepackage{caption}
+\captionsetup[table]{skip=3pt}
+\captionsetup[figure]{skip=3pt}
+
+\usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{balance}
+\usepackage{float}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+
+\pagestyle{empty}
+
+\usepackage{placeins}
+
+\usepackage{titlesec}
+
+\titlespacing*{\section}
+{0pt}{0.4em}{0.2em}
+
+\titlespacing*{\subsection}
+{0pt}{0.2em}{0.2em}
+
+\begin{document}
+
+\begin{minipage}[t]{0.5\textwidth}
+    \raggedright
+    Pierre Lambin--Gosset
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.5\textwidth}
+    \raggedleft
+    DF302
+\end{minipage}
+
+\vspace{0.5em}
+
+\begin{minipage}[H]{0.28\textwidth} 
+    \includegraphics[height=3cm]{img/header/LOGO_ISAE.jpg} 
+    \vspace{0.005em} 
+\end{minipage} 
+\hfill 
+\begin{minipage}[H]{0.67\textwidth} 
+    \textbf{\large Convergence stationnaire d'un écoulement compressible quasi-unidimensionnel dans une tuyère} 
+    
+    \vspace{0.8em} 
+
+    \noindent\underline{\textbf{Objectifs :}} Étudier l'influence du CFL et des schémas numériques (Rusanov et Roe) sur la convergence stationnaire et la diffusion numérique des solutions des équations d'Euler quasi-1D. 
+    
+    \vspace{0.4em} 
+
+    \noindent\underline{\textbf{Mots-clés :}} Euler 1D, volumes finis, CFL, tuyère, convergence stationnaire 
+\end{minipage}
+
+\vspace{0.6em} 
+\noindent\rule{\linewidth}{0.4pt} 
+
+\begin{multicols}{2}
+    \raggedcolumns
+    \section{Introduction}
+    Les écoulements compressibles jouent un rôle central en propulsion aérospatiale, notamment dans les tuyères des moteurs-fusées et des turboréacteurs, où ils conditionnent directement les performances de poussée. 
+    L'écoulement quasi-unidimensionnel dans une tuyère constitue un cadre d'étude académique de référence pour l'analyse des méthodes numériques en mécanique des fluides compressibles, en raison de la présence de phénomènes 
+    clés tels que l'accélération supersonique, le régime étranglé et la formation éventuelle de chocs. Dans ce contexte, le développement d'un solveur numérique 1D~\cite{github} basé sur la méthode des volumes finis permet d'analyser le 
+    comportement de différents schémas numériques et d'évaluer leur capacité à reproduire fidèlement la physique de l'écoulement compressible.
+    \section{Cas de référence : tuyère quasi-1D (Anderson)}
+    Le cas de référence considéré est celui présenté par Anderson dans l'annexe B de \textit{Modern Compressible Flow}~\cite{anderson}. Il s'agit d'un écoulement stationnaire dans une tuyère convergente-divergente, modélisé par les 
+    équations d'Euler quasi-1D avec un terme source géométrique associé à la variation de section $A(x) = 1 + 2.2(x-1.5)^2$. 
+    La formulation de référence repose sur l'écriture des équations en variables primitives, $W = [\rho, V, T]$, et sur l'utilisation d'un schéma explicite de MacCormack~\cite{anderson}. Bien que la formulation ne soit pas conservative, 
+    la solution stationnaire obtenue est lisse sur l'ensemble du domaine, en l'abscence de discontinuité. Dans ce contexte, les formulations conservative et non conservative conduisent à une solution physique identique, ce qui permet une 
+    comparaison directe des champs stationnaires. 
+    Afin de valider l'implémentation développée dans ce travail, les profils stationnaires obtenus avec le schéma de MacCormack ont été comparés aux données de référence d'Anderson~\cite{anderson}. 
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{img/ref/maccormack_reference_figure.png}
+        \captionof{figure}{Solution de référence obtenue par le schéma de MacCormack - CFL = 0.5, it = 1400, Nx = 31}
+    \end{center}
+    Les faibles écarts observés valident la reproduction du cas de référence d'Anderson et justifient l'utilisation du schéma de \textit{MacCormack} comme solution numérique de référence.
+    \begin{center}
+        \scalebox{0.85}{
+            \begin{tabular}{c c c c c}
+                \toprule
+                \textbf{Grandeur} & Densité & Vitesse & Température & Mach \\
+                \midrule
+                Erreur relative (\%) & 0.589 & 0.238 & 0.093 & 0.306 \\
+                \bottomrule
+            \end{tabular}
+        }
+        \captionof{table}{Erreur relative maximale par rapport à la solution de référence d'Anderson}
+    \end{center}
+    \section{Méthodologie}
+    L'écoulement compressible quasi-1D dans une tuyère est modélisé par les équations d'Euler écrites sous forme conservative, intégrant un terme source géométrique lié à la variation de section. Le système s'écrit sous la forme :
+    \begin{equation*}
+        \frac{\partial}{\partial t} 
+        \begin{pmatrix}
+            A 
+            \begin{bmatrix}
+                \rho \\
+                \rho V \\
+                \rho E \\
+            \end{bmatrix}
+        \end{pmatrix}  + \frac{\partial}{\partial x} 
+        \begin{pmatrix}
+            A 
+            \begin{bmatrix}
+                \rho V \\
+                \rho V^2 + p \\
+                (\rho E + p) V \\
+            \end{bmatrix}
+        \end{pmatrix} =
+        \begin{bmatrix}
+            0 \\
+            p\frac{dA}{dx} \\ 
+            0
+        \end{bmatrix}
+    \end{equation*}
+    La discrétisation spatiale du système est réalisée par la méthode des volumes finis sur un maillage unidimensionnel uniforme. L'évolution temporelle est intégrée à l'aide d'un schéma explicite, avec un pas de temps déterminé à partir de la condition de 
+    CFL. Le calcul des flux numériques aux interfaces de cellules repose sur des schémas de type Godunov, fondés sur la résolution approchée de problèmes de Riemann locaux. Deux schémas sont considérés dans ce travail : \\
+    Le schéma Roe est un schéma de premier ordre en espace, basé sur une linéarisation locale du système d'Euler autour d'un état moyen. Il permet une bonne représentation des ondes caractéristiques de l'écoulement et se distingue par une faible diffusion numérique, en 
+    particulier pour la capture des gradients marqués et des discontinuités~\cite{clinco2024}. \\
+    Le schéma de Rusanov est lui aussi un schéma de premier ordre en espace. Il repose sur une estimation maximale de la vitesse d'onde pour l'évaluation du flux numérique, ce qui lui confère une grande robustesse et une stabilité élevée, indépendamment de la compléxité locale de l'écoulement. 
+    En contrepartie, il induit une diffusion numérique plus importante~\cite{toro_rusanov}
+    \section{Résultats et comparaison des schémas numériques}
+    L'ensemble des simulations est réalisé sur une configuration numérique identique afin d'assurer une comparaison équitable entre les schémas. Le maillage est fixé à Nx = 61, avec un nombre d'itérations de 5000. Trois valeurs de CFL sont considérées (0.05, 0.5, 1.0) 
+    pour analyser l'influence du pas de temps sur la convergence stationnaire. La convergence est évaluée à partir du résidu maximal, avec un critère fixé à res\_max $<$ $5e-3$. L'initialisation ainsi que les conditions limites sont identiques à celles proposées par Anderson~\cite{anderson}.
+    \subsection*{Influence CFL sur le schéma de Rusanov}
+    La \hyperref[fig:rusanov]{figure~\ref*{fig:rusanov}} et le \hyperref[tab:rusanov_cfl]{tableau~\ref*{tab:rusanov_cfl}} présentent la comparaison entre la solution de référence et les résultats obtenus avec le schéma de Rusanov. 
+    Pour CFL = 0.05, la simulation ne converge pas vers un état stationnaire, ce qui se traduit par des écarts persistants sur les champs de température et de Mach. Les erreurs relatives globales restent toutefois modérées, avec 
+    $\varepsilon_{(2)} \approx 3.36\%$ pour la température et $\varepsilon_{(2)} \approx 8.79\%$ pour le Mach. 
+    Pour CFL = 0.5, une convergence stationnaire est obtenue après 1180 itérations et les profils sont en bon accord avec la référence, avec 
+    $\varepsilon_{(2)} \approx 3.71\%$ pour la température et $\varepsilon_{(2)} \approx 9.16\%$ pour le Mach. Un lissage notable des gradients est néanmoins observé, traduisant la diffusion numérique intrinsèque du schéma de Rusanov. 
+    Enfin, pour CFL = 1.0, la simulation ne converge plus et les erreurs globales atteignent 
+    $\varepsilon_{(2)} \approx 3.69\%$ pour la température et $\varepsilon_{(2)} \approx 9.07\%$ pour le Mach. Ces résultats confirment que le schéma de Rusanov, bien que robuste, demeure fortement diffusif et nécessite un choix modéré du nombre de CFL.
+    \begin{center}
+    \scalebox{0.85}{
+    \begin{tabular}{c c c c}
+    \toprule
+    \textbf{CFL} & \textbf{Convergence} & \textbf{Résidu$_{\max}$} & \textbf{Itérations} \\
+        \midrule
+        0.05 & Non & $5.749\times10^{-1}$ & -- \\
+        0.5  & Oui & $4.988\times10^{-3}$ & 1180 \\
+        1.0  & Non & $9.850\times10^{-3}$ & -- \\
+        \bottomrule
+    \end{tabular}
+    }
+    \captionof{table}{Résultats de simulation — schéma de Rusanov}
+    \label{tab:rusanov_cfl}
+    \end{center}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{img/comp_ref_rusanov/comparaison_schema_Rusanov_champs-Temperature-Mach_CFLs-0.05-0.5-1.0.png}
+        \captionof{figure}{Comparaison MacCormack - Rusanov}
+        \label{fig:rusanov}
+    \end{center}
+    \subsection*{Influence CFL sur le schéma Roe}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{img/comp_ref_roe/comparaison_schema_Roe_champs-Temperature-Mach_CFLs-0.05-0.5-1.0.png}
+        \captionof{figure}{Comparaison MacCormack - Roe}
+        \label{fig:roe}
+    \end{center}
+    La \hyperref[fig:roe]{figure~\ref*{fig:roe}} et le \hyperref[tab:roe_cfl]{tableau~\ref*{tab:roe_cfl}} présentent la comparaison entre la solution de référence et les résultats obtenus avec le schéma de Roe. 
+    Pour CFL = 0.05, la simulation ne converge pas, bien que les champs de température et de Mach restent en bon accord global avec la référence, avec des erreurs relatives globales de l'ordre de $\varepsilon_{(2)} \approx 1.13\%$ et $\varepsilon_{(2)} \approx 1.56\%$, respectivement. 
+    Pour CFL = 0.5, une convergence stationnaire est obtenue après 1190 itérations et les profils sont en très bon accord avec la référence, les erreurs restant faibles ($\varepsilon_{(2)} \approx 0.88\%$ pour la température et $\varepsilon_{(2)} \approx 1.57\%$ pour le Mach). 
+    Enfin, pour CFL = 1.0, la simulation ne converge plus, bien que les erreurs globales demeurent du même ordre de grandeur. Ces résultats confirment que le schéma de Roe est peu diffusif et précis, mais plus sensible au choix du CFL dans un cadre explicite.
+    \begin{center}
+    \scalebox{0.85}{
+    \begin{tabular}{c c c c}
+    \toprule
+    \textbf{CFL} & \textbf{Convergence} & \textbf{Résidu$_{\max}$} & \textbf{Itérations} \\
+        \midrule
+        0.05 & Non & $8.044\times10^{-1}$ & -- \\
+        0.5  & Oui & $4.931\times10^{-3}$ & 1192 \\
+        1.0  & Non & $9.08\times10^{-3}$ & -- \\
+        \bottomrule
+    \end{tabular}
+    }
+    \captionof{table}{Résultats de simulation — schéma de Roe}    
+    \label{tab:roe_cfl}
+    \end{center}
+    \subsection*{Comparaison MultiSchéma/MultiCFL}    
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{img/comparaison/comparaison_schemas_Roe-vs-Rusanov_champs-Temperature-Mach_CFLs-0.5-1.0.png}
+        \captionof{figure}{Comparaison MultiSchéma/MultiCFL}
+    \end{center}
+    La comparaison multi-schémas met en évidence que, pour CFL = 0.5 (état convergé), le schéma de Roe présente les erreurs relatives globales les plus faibles, avec $\varepsilon_{(2)} \approx 0.88\%$ pour la température et $\varepsilon_{(2)} \approx 1.57\%$ pour le Mach. À CFL identique, ces erreurs restent nettement 
+    inférieures à celles obtenues avec le schéma de Rusanov, confirmant la meilleure précision du schéma de Roe.
+    \section{Conclusion}
+    Dans ce travail, un solveur quasi-unidimensionnel basé sur les équations d'Euler et la méthode des volumes finis a été développé et validé sur un cas de référence classique de tuyère convergente-divergente. La solution de référence d'Anderson a permis de vérifier la cohérence de l'implémentation 
+    et de servir de base de comparaison pour l'analyse des schémas numériques. L'étude de l'influence du nombre de CFL a montré qu'un choix modéré (CFL = 0.5) constitue un compromis optimal entre stabilité et vitesse de convergence pour les schémas explicites considérés. La comparaison des schémas met 
+    en évidence que le schéma de Roe fournit des erreurs globales significativement plus faibles et une meilleure restitution des gradients que le schéma de Rusanov, au prix d'une sensibilité accrue au choix du pas de temps. Ces résultats soulignent l'importance du choix conjoint du schéma numérique et 
+    du nombre de CFL pour la simulation d'écoulements compressibles stationnaires.
+
+    {
+        \footnotesize
+    \begin{thebibliography}{99}
+    \bibitem{github}
+    P. Lambin--Gosset, GitHub repository, 2025.
+    \url{https://github.com/Pierre-1107/ARTICLE_NOZZLE_1D}
+    \bibitem{anderson}
+    J. D. Anderson,
+    \textit{Modern Compressible Flow: With Historical Perspective},
+    3\textsuperscript{rd} ed., McGraw--Hill, New York, 2003.    
+    \bibitem{clinco2024}
+    N. Clinco, M. Girfoglio, A. Quaini, and G. Rozza,
+    ``Computational study of numerical flux schemes for mesoscale atmospheric flows in a Finite Volume framework,''
+    \url{https://arxiv.org/abs/2404.19559}
+    \bibitem{toro_rusanov}
+    E. F. Toro and S. A. Tokareva,
+    ``Rusanov-type schemes for hyperbolic equations: Wave-speed estimates, monotonicity and stability,''
+    \url{https://arxiv.org/abs/2412.03522}
+    \end{thebibliography}
+    }
+\end{multicols}
+\balance
+\end{document}
+

@@ -1,11 +1,11 @@
 compare_CFL:
   activate: True
-  scheme_name: 'Schema-Roe'
+  scheme_name: 'Schema-Rusanov'
   fields: ['Temperature', 'Mach']
 
 compare_scheme:
   activate: False
   schemes_names: ['Schema-Roe', 'Schema-Rusanov']
   fields: ['Temperature', 'Mach']
-  comp_multi_cfl: False
-  target_cfl: 0.5
+  comp_multi_cfl: True
+  target_cfl: null

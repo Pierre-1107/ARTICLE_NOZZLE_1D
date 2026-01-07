@@ -4,18 +4,18 @@ physics:
 mesh:
   x0: 0.0
   xL: 3.0
-  Nx: 31
+  Nx: 61
 
 numerics:
-  Nt: 2001
-  CFL: [0.5]
+  Nt: 5001
+  CFL: [0.05, 0.5, 1]
 
 scheme:
-  name: Rusanov
+  name: Roe
 
 live_plot:
-  bool: False
+  bool: True
   frequency: 50
 
 convergence:
-  criterion: 2e-3
+  criterion: 5e-3

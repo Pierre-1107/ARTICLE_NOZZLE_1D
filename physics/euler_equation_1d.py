@@ -7,6 +7,10 @@
 # Fichier       : euler_equation_1d.py
 # ===========================================================================
 
+# ===== DEFINITION ===== #
+# -> cons : conservatif (rho, rhoV, rhoE)
+# -> prim : primitif (rho, V, p)
+
 import numpy as np
 from physics.gas import Gas
 

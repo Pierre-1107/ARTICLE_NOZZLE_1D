@@ -9,11 +9,12 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from pathlib import Path
 
 class PostProcess:
 
-    def __init__(self, result_dir:str|Path):
+    def __init__(self, result_dir:str|Path, fmt_graphix:dict={'cmap': 'jet', 'col_min': 0.1, 'col_max':0.9}):
 
         self.REFERENCE_FOLDER = "Reference-MacCormack"
 
@@ -37,6 +38,10 @@ class PostProcess:
         root_dir = Path(__file__).resolve().parents[1]
         self.comparison_dir = root_dir/"results"/"Comparaison"
         self.comparison_dir.mkdir(parents=True, exist_ok=True)
+
+        self.color_map = fmt_graphix['cmap']
+        self.col_min = fmt_graphix['col_min']
+        self.col_max = fmt_graphix['col_max']
 
 
     def check_output_dir(self) -> None:
@@ -91,6 +96,11 @@ class PostProcess:
             )
         
         return cfl, scheme
+    
+
+    def compute_error(self, ref: np.ndarray, sol: np.ndarray) -> float:
+
+        return 100.0 * np.linalg.norm(sol - ref, 2) / np.linalg.norm(ref, 2)
 
 
     def compare_CFL(
@@ -134,6 +144,15 @@ class PostProcess:
 
         # +---+ Gestion de la figure +---+ #
 
+            # +--> définition cmap
+        sorted_cfl = sorted(all_cfl)
+        n_cfl = len(sorted_cfl)
+        cmap = cm.get_cmap(self.color_map)
+        color_values = np.linspace(self.col_min, self.col_max, n_cfl)
+        cfl_colors = {
+            cfl: cmap(color_values[idx]) for idx, cfl in enumerate(sorted_cfl)
+        }
+
             # +--> nom du fichier
         fields_str = "-".join(fields)
         scheme_str = scheme_name.split("-", 1)[1]
@@ -175,6 +194,7 @@ class PostProcess:
                 axes[idx, 0].plot(
                     sol['x'], 
                     sol[field],
+                    color=cfl_colors[cfl],
                     label=f"CFL={cfl}"
                 )
 
@@ -188,21 +208,25 @@ class PostProcess:
                 else:
                     ref_field = ref_sol[field]
 
+                error = self.compute_error(ref=ref_field, sol=sol[field])
+
                 # +--> Erreur absolue
                 axes[idx, 1].plot(
                     sol['x'], 
-                    np.abs(sol[field] - ref_field), 
-                    label=rf"CFL={cfl}, $|{self.nickname[field]}_{{ref}} - {self.nickname[field]}_{{sol}}|$"
+                    np.abs(sol[field] - ref_field),
+                    color=cfl_colors[cfl],
+                    label=rf"CFL={cfl} - $\varepsilon_{{(2)}}$ = {error:.3f} %"
                 )
+
             
             # +---+ Mise en forme des graphiques +---+ #
             axes[idx, 0].set_ylabel(field, fontsize=14)
-            axes[idx, 1].set_ylabel(f"Erreur absolue : {field}", fontsize=14)
+            # axes[idx, 1].set_ylabel(f"Erreur absolue : {field}", fontsize=14)
             axes[idx, 1].set_yscale("log")
 
             for col in range(2):
                 axes[idx, col].grid('on', alpha=0.75, linestyle='-.')
-                axes[idx, col].legend(loc='best', ncol=2, fontsize=10)
+                axes[idx, col].legend(loc='best', ncol=1, fontsize=10)
 
             if idx == n_fields - 1:
                 axes[idx, 0].set_xlabel("x", fontsize=14)
@@ -276,7 +300,7 @@ class PostProcess:
 
             all_solutions[scheme] = sol_arr
 
-        # +---+ Séléection des CFL +---+ #
+        # +---+ Séléction des CFL +---+ #
         cfl_sets = [set(sol.keys()) for sol in all_solutions.values()]
 
         if target_cfl is not None:
@@ -302,6 +326,7 @@ class PostProcess:
             cfl_to_compare = sorted(set().union(*cfl_sets))
 
         # +---+ Gestion de la figure +---+ #
+
         n_fields = len(fields)
 
             # +--> nom du fichier
@@ -322,6 +347,19 @@ class PostProcess:
         else:
             def file_name(cfl:float) -> str:
                 return f"{file_base}_CFL-{cfl}.png"
+            
+            # +--> définition cmap
+        sorted_cfl = sorted(cfl_to_compare)
+        n_cfl = len(sorted_cfl)
+        cmap = cm.get_cmap(self.color_map)
+        color_values = np.linspace(self.col_min, self.col_max, n_cfl)
+        cfl_colors = {
+            cfl: cmap(color_values[idx]) for idx, cfl in enumerate(sorted_cfl)
+        }
+        scheme_linestyles = {
+            schemes[0]: '-', 
+            schemes[1]: '--'
+        }
 
         if comp_multi_cfl:
             
@@ -366,6 +404,8 @@ class PostProcess:
                         axes[idx, 0].plot(
                             sol['x'], 
                             sol[field],
+                            color=cfl_colors[cfl],
+                            linestyle=scheme_linestyles[name],
                             label=label
                         )
 
@@ -379,16 +419,20 @@ class PostProcess:
                         else:
                             ref_field = ref_sol[field]
 
+                        error = self.compute_error(ref=ref_field, sol=sol[field])
+
                         # +--> Erreur absolue
                         axes[idx, 1].plot(
                             sol['x'], 
-                            np.abs(sol[field] - ref_field), 
-                            label=rf"{name} - CFL={cfl} - $|{self.nickname[field]}_{{ref}} - {self.nickname[field]}_{{sol}}|$"
+                            np.abs(sol[field] - ref_field),
+                            color=cfl_colors[cfl],
+                            linestyle=scheme_linestyles[name], 
+                            label=rf"{name} - CFL={cfl} - $\varepsilon_{{(2)}}$ = {error:.3f} %"
                         )
 
                 # +---+ Mise en forme des graphiques +---+ #
                 axes[idx, 0].set_ylabel(field, fontsize=14)
-                axes[idx, 1].set_ylabel(f"Erreur absolue : {field}", fontsize=14)
+                # axes[idx, 1].set_ylabel(f"Erreur absolue : {field}", fontsize=14)
                 axes[idx, 1].set_yscale("log")
 
                 for col in range(2):
@@ -450,6 +494,8 @@ class PostProcess:
                         axes[idx, 0].plot(
                             sol['x'], 
                             sol[field],
+                            color=cfl_colors[cfl],
+                            linestyle=scheme_linestyles[name], 
                             label=name
                         )
 
@@ -463,15 +509,20 @@ class PostProcess:
                         else:
                             ref_field = ref_sol[field]
 
+                            
+                        error = self.compute_error(ref=ref_field, sol=sol[field])
+
                         # +--> Erreur absolue
                         axes[idx, 1].plot(
                             sol['x'], 
-                            np.abs(sol[field] - ref_field), 
-                            label=rf"{name} - $|{self.nickname[field]}_{{ref}} - {self.nickname[field]}_{{sol}}|$"
+                            np.abs(sol[field] - ref_field),
+                            color=cfl_colors[cfl],
+                            linestyle=scheme_linestyles[name],  
+                            label=rf"{name} - $\varepsilon_{{{(2)}}}$ = {error:.3f} %"
                         )
                     # +---+ Mise en forme des graphiques +---+ #
                     axes[idx, 0].set_ylabel(field, fontsize=14)
-                    axes[idx, 1].set_ylabel(f"Erreur absolue : {field}", fontsize=14)
+                    # axes[idx, 1].set_ylabel(f"Erreur absolue : {field}", fontsize=14)
                     axes[idx, 1].set_yscale("log")
 
                     for col in range(2):

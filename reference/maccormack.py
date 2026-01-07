@@ -8,9 +8,11 @@
 # ===========================================================================
 
 from maccormack_scheme import *
+from termcolor import colored
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import yaml
 
 # +-----+ solve +-----+ #
@@ -53,7 +55,7 @@ def solve_nozzle_maccormack(
         ax.grid(True)
         ax.legend()
 
-    # --- time loop ---
+    # --- boucle temporelle ---
     for it in range(Nt - 1):
 
         dt = time_step(U[it, :], T[it], CFL, dx)
@@ -62,7 +64,7 @@ def solve_nozzle_maccormack(
             RHO[it], U[it], T[it], A, dx, dt, gamma
         )
 
-        # --- Live plot update ---
+        # --- Live plot mise à jour ---
         if live_plot and it % 10 == 0:
             it_axis = np.arange(it + 1)
 
@@ -112,20 +114,57 @@ def main():
         live_plot=cfg["live_plot"]["bool"]
     )
 
+    # +-----+ état de référence +-----+ #
+    REF = pd.read_csv("reference/anderson_reference.csv")
+
     # +-----+ figure +-----+ #
     fig, axes = plt.subplots(2, 2, figsize=(16, 8))
     fig.suptitle("Solution de référence - MacCormack (tuyère quasi-1D)", fontsize=24)
 
-    axes[0, 0].plot(solution['x'], solution['Density'], '-o', color='black')
-    axes[0, 1].plot(solution['x'], solution['Velocity'], '-o', color='black')
-    axes[1, 0].plot(solution['x'], solution['Temperature'], '-o', color='black')
-    axes[1, 1].plot(solution['x'], solution['Mach'], '-o', color='black')
+    axes[0, 0].plot(
+        solution['x'], solution['Density'], 
+        '-.o', color='black',  markerfacecolor='none', label="Code")
+    axes[0, 0].scatter(
+        REF['x'], REF['Density'],
+        marker='x', color='red', s=40, label="Anderson"
+    )
+
+    axes[0, 1].plot(solution['x'], solution['Velocity'],
+        '-.o', color='black',  markerfacecolor='none', label="Code")
+    axes[0, 1].scatter(
+        REF['x'], REF['Velocity'],
+        marker='x', color='red', s=40, label="Anderson"
+    )
+
+    axes[1, 0].plot(solution['x'], solution['Temperature'],
+        '-.o', color='black',  markerfacecolor='none', label="Code")
+    axes[1, 0].scatter(
+        REF['x'], REF['Temperature'],
+        marker='x', color='red', s=40, label="Anderson"
+    )
+
+    axes[1, 1].plot(solution['x'], solution['Mach'],
+        '-.o', color='black',  markerfacecolor='none', label="Code")
+    axes[1, 1].scatter(
+        REF['x'], REF['Mach'],
+        marker='x', color='red', s=40, label="Anderson"
+    )
 
     ylabel = ["Densité", "Vitesse", "Température", "Mach"]
     for idx, ax in enumerate(axes.flat):
         ax.grid('on', alpha=0.75, linestyle='-.')
         ax.set_xlabel("x", fontsize=16)
         ax.set_ylabel(ylabel[idx], fontsize=16)
+        ax.legend(fontsize=16)
+
+    print(colored("\nValidation du cas de référence (Anderson)", "cyan", attrs=["bold"]))
+    print(colored("-" * 41, "cyan"))
+    for idx, quantity in enumerate(["Density", "Velocity", "Temperature", "Mach"]):
+        err = compute_error(ref=REF[quantity], sol=solution[quantity])
+        label = colored(f"{quantity:<12}", "yellow")
+        value = colored(f"{err:6.3f} %", "green")
+        print(f"{label} : {value}")
+    print(colored("-" * 41 + "\n", "cyan"))
 
     root_dir = Path(__file__).resolve().parents[1]
     mac_dir = root_dir/"results"/"Reference-MacCormack"
