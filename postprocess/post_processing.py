@@ -14,7 +14,7 @@ from pathlib import Path
 
 class PostProcess:
 
-    def __init__(self, result_dir:str|Path, fmt_graphix:dict={'cmap': 'jet', 'col_min': 0.1, 'col_max':0.9}):
+    def __init__(self, result_dir:str|Path, fmt_graphix:dict={'cmap': ['jet', 'viridis'], 'col_min': 0.1, 'col_max':0.9}):
 
         self.REFERENCE_FOLDER = "Reference-MacCormack"
 
@@ -147,7 +147,7 @@ class PostProcess:
             # +--> définition cmap
         sorted_cfl = sorted(all_cfl)
         n_cfl = len(sorted_cfl)
-        cmap = cm.get_cmap(self.color_map)
+        cmap = cm.get_cmap(self.color_map[0])
         color_values = np.linspace(self.col_min, self.col_max, n_cfl)
         cfl_colors = {
             cfl: cmap(color_values[idx]) for idx, cfl in enumerate(sorted_cfl)
@@ -351,15 +351,18 @@ class PostProcess:
             # +--> définition cmap
         sorted_cfl = sorted(cfl_to_compare)
         n_cfl = len(sorted_cfl)
-        cmap = cm.get_cmap(self.color_map)
-        color_values = np.linspace(self.col_min, self.col_max, n_cfl)
-        cfl_colors = {
-            cfl: cmap(color_values[idx]) for idx, cfl in enumerate(sorted_cfl)
-        }
+
         scheme_linestyles = {
             schemes[0]: '-', 
-            schemes[1]: '--'
+            schemes[1]: '-'
         }
+
+        cfl_colors = {
+            scheme_name.split("-", 1)[1] : {
+                cfl: cm.get_cmap(self.color_map[scheme_idx])(np.linspace(self.col_min, self.col_max, n_cfl)[idx]) for idx, cfl in enumerate(sorted_cfl)
+            } for scheme_idx, scheme_name in enumerate(all_solutions.keys())
+        }
+
 
         if comp_multi_cfl:
             
@@ -404,7 +407,7 @@ class PostProcess:
                         axes[idx, 0].plot(
                             sol['x'], 
                             sol[field],
-                            color=cfl_colors[cfl],
+                            color=cfl_colors[name][cfl],
                             linestyle=scheme_linestyles[name],
                             label=label
                         )
@@ -425,7 +428,7 @@ class PostProcess:
                         axes[idx, 1].plot(
                             sol['x'], 
                             np.abs(sol[field] - ref_field),
-                            color=cfl_colors[cfl],
+                            color=cfl_colors[name][cfl],
                             linestyle=scheme_linestyles[name], 
                             label=rf"{name} - CFL={cfl} - $\varepsilon_{{(2)}}$ = {error:.3f} %"
                         )
@@ -488,13 +491,11 @@ class PostProcess:
 
                         sol = sol_dict[cfl]
 
-                        sol = sol_dict[cfl]
-
                         # +--> Champs issus des solutions
                         axes[idx, 0].plot(
                             sol['x'], 
                             sol[field],
-                            color=cfl_colors[cfl],
+                            color=cfl_colors[name][cfl],
                             linestyle=scheme_linestyles[name], 
                             label=name
                         )
@@ -516,7 +517,7 @@ class PostProcess:
                         axes[idx, 1].plot(
                             sol['x'], 
                             np.abs(sol[field] - ref_field),
-                            color=cfl_colors[cfl],
+                            color=cfl_colors[name][cfl],
                             linestyle=scheme_linestyles[name],  
                             label=rf"{name} - $\varepsilon_{{{(2)}}}$ = {error:.3f} %"
                         )

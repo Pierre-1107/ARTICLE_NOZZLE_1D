@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.3) (preloaded format=pdflatex 2025.4.8)  7 JAN 2026 17:26
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.3) (preloaded format=pdflatex 2025.4.8)  8 JAN 2026 22:37
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -588,11 +588,11 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 (caption)                particular \caption on input line 191.
 See the caption package documentation for explanation.
 
-<img/comparaison/comparaison_schemas_Roe-vs-Rusanov_champs-Temperature-Mach_CFLs-0.5-1.0.png, id=62, 860.7357pt x 554.07pt>
+<img/comparaison/comparaison_schemas_Roe-vs-Rusanov_champs-Temperature-Mach_CFLs-0.5-1.0.png, id=62, 838.8138pt x 535.2798pt>
 File: img/comparaison/comparaison_schemas_Roe-vs-Rusanov_champs-Temperature-Mach_CFLs-0.5-1.0.png Graphic file (type png)
 <use img/comparaison/comparaison_schemas_Roe-vs-Rusanov_champs-Temperature-Mach_CFLs-0.5-1.0.png>
 Package pdftex.def Info: img/comparaison/comparaison_schemas_Roe-vs-Rusanov_champs-Temperature-Mach_CFLs-0.5-1.0.png  used on input line 196.
-(pdftex.def)             Requested size: 238.76944pt x 153.7013pt.
+(pdftex.def)             Requested size: 238.76944pt x 152.36847pt.
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
 (caption)                particular \caption on input line 197.
@@ -611,13 +611,13 @@ Package rerunfilecheck Info: File `Article_1D_PierreLambin.out' has not changed.
 Here is how much of TeX's memory you used:
  16550 strings out of 473523
  323917 string characters out of 5714631
- 721308 words of memory out of 5000000
+ 723308 words of memory out of 5000000
  39589 multiletter control sequences out of 15000+600000
  566020 words of font info for 64 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,12n,80p,474b,1218s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti8.pfb><C:/Users/plamb/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on Article_1D_PierreLambin.pdf (2 pages, 2831658 bytes).
+Output written on Article_1D_PierreLambin.pdf (2 pages, 2836026 bytes).
 PDF statistics:
  146 PDF objects out of 1000 (max. 8388607)
  19 named destinations out of 1000 (max. 500000)
