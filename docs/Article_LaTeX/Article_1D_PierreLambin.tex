@@ -82,7 +82,7 @@
     \section{Cas de référence : tuyère quasi-1D (Anderson)}
     Le cas de référence considéré est celui présenté par Anderson dans l'annexe B de \textit{Modern Compressible Flow}~\cite{anderson}. Il s'agit d'un écoulement stationnaire dans une tuyère convergente-divergente, modélisé par les 
     équations d'Euler quasi-1D avec un terme source géométrique associé à la variation de section $A(x) = 1 + 2.2(x-1.5)^2$. 
-    La formulation de référence repose sur l'écriture des équations en variables primitives, $W = [\rho, V, T]$, et sur l'utilisation d'un schéma explicite de MacCormack~\cite{anderson}. Bien que la formulation ne soit pas conservative, 
+    La formulation de référence repose sur l'écriture des équations en variables primitives normalisées, $W = [\rho, V, T]$, et sur l'utilisation d'un schéma explicite de MacCormack~\cite{anderson}. Bien que la formulation ne soit pas conservative, 
     la solution stationnaire obtenue est lisse sur l'ensemble du domaine, en l'abscence de discontinuité. Dans ce contexte, les formulations conservative et non conservative conduisent à une solution physique identique, ce qui permet une 
     comparaison directe des champs stationnaires. 
     Afin de valider l'implémentation développée dans ce travail, les profils stationnaires obtenus avec le schéma de MacCormack ont été comparés aux données de référence d'Anderson~\cite{anderson}. 
@@ -134,7 +134,7 @@
     Le schéma Roe est un schéma de premier ordre en espace, basé sur une linéarisation locale du système d'Euler autour d'un état moyen. Il permet une bonne représentation des ondes caractéristiques de l'écoulement et se distingue par une faible diffusion numérique, en 
     particulier pour la capture des gradients marqués et des discontinuités~\cite{clinco2024}. \\
     Le schéma de Rusanov est lui aussi un schéma de premier ordre en espace. Il repose sur une estimation maximale de la vitesse d'onde pour l'évaluation du flux numérique, ce qui lui confère une grande robustesse et une stabilité élevée, indépendamment de la compléxité locale de l'écoulement. 
-    En contrepartie, il induit une diffusion numérique plus importante~\cite{toro_rusanov}
+    En contrepartie, il induit une diffusion numérique plus importante~\cite{toro_rusanov}.
     \section{Résultats et comparaison des schémas numériques}
     L'ensemble des simulations est réalisé sur une configuration numérique identique afin d'assurer une comparaison équitable entre les schémas. Le maillage est fixé à Nx = 61, avec un nombre d'itérations de 5000. Trois valeurs de CFL sont considérées (0.05, 0.5, 1.0) 
     pour analyser l'influence du pas de temps sur la convergence stationnaire. La convergence est évaluée à partir du résidu maximal, avec un critère fixé à res\_max $<$ $5e-3$. L'initialisation ainsi que les conditions limites sont identiques à celles proposées par Anderson~\cite{anderson}.
